@@ -20,6 +20,16 @@ body, html {
     align-items: center;
 }
 
+canvas {
+    width: 100vw; /* Full width of viewport */
+    height: calc(100vh - 50px); /* Full height minus toolbar */
+    border: 0;
+    outline: 2px solid #000;
+    display: block;
+    cursor: crosshair;
+    touch-action: none; /* Prevents the default touch actions like scrolling */
+}
+
 button {
     margin: 0 10px;
     padding: 10px 20px;
@@ -35,14 +45,6 @@ button:hover {
     background-color: #0056b3;
 }
 
-canvas {
-    flex: 1;
-    border: 2px solid #000;
-    display: block;
-    cursor: crosshair;
-    touch-action: none;
-}
-
 input[type="range"] {
     margin-left: 10px;
     width: 150px;
@@ -51,13 +53,41 @@ input[type="range"] {
 #strokeSizeValue {
     margin-left: 10px;
     font-weight: bold;
+    text-align: center;
+    display: inline-block;
+    width: 30px; /* Fixed width for stable display */
 }
 
 label[for="stabilizerCheckbox"] {
-    margin-left: 20px;
+    margin-left: 10px;
     margin-right: 5px;
 }
 
-input[type="checkbox"] {
-    margin-left: 5px;
+/* Media Query for Mobile Devices (widths <= 1200px) */
+@media (max-width: 1200px) {
+    .toolbar {
+        flex-direction: column; /* Stack the toolbar items vertically */
+        padding: 5px; /* Reduce padding on mobile */
+    }
+
+    button {
+        margin: 5px 0; /* Stack buttons vertically with small margin */
+        padding: 8px 15px; /* Reduce button size for mobile */
+        font-size: 14px; /* Smaller font size */
+    }
+
+    input[type="range"] {
+        margin: 5px 0;
+        width: 100%; /* Full width slider on mobile */
+    }
+
+    #strokeSizeValue {
+        margin-left: 0; /* Reset margin for vertical layout */
+        margin-top: 5px; /* Add a top margin for separation */
+    }
+}
+
+label[for="stabilizerCheckbox"] {
+    margin-left: 10px;
+    margin-right: 5px;
 }

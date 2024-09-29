@@ -13,22 +13,22 @@ canvas.width = window.innerWidth;
 canvas.height = window.innerHeight - 50; // Adjusting for toolbar height
 
 // Default settings
-let drawing = false;
 let isErasing = false;
 let baseDrawLineWidth = parseInt(strokeSizeSlider.value); // Base drawing line width from slider
 let baseEraseLineWidth = 100; // Base erasing line width
 let strokeStyle = '#000000';
-let lastX = 0;
-let lastY = 0;
-let points = []; // For storing points for smoothing
+
+// Keep track of active pointers (for multi-touch support)
+const activePointers = {}; // Each pointerId will have its own state
 
 // Update stroke size text display
 strokeSizeValue.textContent = baseDrawLineWidth;
 
-// Event listeners for pointer (better for tablet support)
+// Event listeners for pointer (better for tablet and multi-touch support)
 canvas.addEventListener('pointerdown', startDrawing);
 canvas.addEventListener('pointermove', draw);
 canvas.addEventListener('pointerup', stopDrawing);
+canvas.addEventListener('pointercancel', stopDrawing);
 canvas.addEventListener('pointerout', stopDrawing);
 
 // Event listener for stroke size slider
@@ -38,33 +38,48 @@ strokeSizeSlider.addEventListener('input', function () {
 });
 
 function startDrawing(e) {
-    drawing = true;
-    points = []; // Reset points for smoothing
-    [lastX, lastY] = [e.clientX, e.clientY - 50]; // Adjust for toolbar height
-    points.push({ x: lastX, y: lastY }); // Start tracking points
+    // Prevents unwanted interactions like scrolling
+    e.preventDefault();
+
+    const pointerId = e.pointerId; // Get the unique pointerId for this touch event
+    const { x, y } = getCanvasCoordinates(e);
+
+    // Initialize drawing state for this pointer
+    activePointers[pointerId] = {
+        drawing: true,
+        lastX: x,
+        lastY: y,
+        points: [{ x, y }] // Store points for potential smoothing
+    };
 }
 
 function draw(e) {
-    if (!drawing) return;
+    const pointerId = e.pointerId; // Get the unique pointerId for this touch event
 
+    if (!activePointers[pointerId] || !activePointers[pointerId].drawing) return; // Check if this pointer is drawing
+
+    const { x: currentX, y: currentY } = getCanvasCoordinates(e);
     const pressure = e.pressure || 0.5; // Default to 0.5 if no pressure is available
     const lineWidth = isErasing ? baseEraseLineWidth * pressure : baseDrawLineWidth * pressure;
     const color = isErasing ? '#ffffff' : strokeStyle;
-    
-    // Add current point to the points array for smoothing
-    let currentX = e.clientX;
-    let currentY = e.clientY - 50; // Adjust for toolbar height
-    points.push({ x: currentX, y: currentY });
+
+    // Add the current point to the points array
+    activePointers[pointerId].points.push({ x: currentX, y: currentY });
 
     if (stabilizerCheckbox.checked) {
         // Stabilizer ON: Draw smooth lines using quadratic curves
-        if (points.length > 2) {
-            // Use the last two points and the current one for smoothing
-            const [prevPoint, curPoint] = [points[points.length - 2], points[points.length - 1]];
-            const midPoint = { x: (prevPoint.x + curPoint.x) / 2, y: (prevPoint.y + curPoint.y) / 2 };
+        if (activePointers[pointerId].points.length > 2) {
+            const [prevPoint, curPoint] = [
+                activePointers[pointerId].points[activePointers[pointerId].points.length - 2],
+                activePointers[pointerId].points[activePointers[pointerId].points.length - 1]
+            ];
+            const midPoint = {
+                x: (prevPoint.x + curPoint.x) / 2,
+                y: (prevPoint.y + curPoint.y) / 2
+            };
 
             ctx.beginPath();
-            ctx.moveTo(lastX, lastY);
+            ctx.moveTo(activePointers[pointerId].lastX, activePointers[pointerId].lastY);
             ctx.quadraticCurveTo(prevPoint.x, prevPoint.y, midPoint.x, midPoint.y);
             ctx.lineWidth = lineWidth;
             ctx.strokeStyle = color;
@@ -72,12 +87,13 @@ function draw(e) {
             ctx.stroke();
             ctx.closePath();
 
-            [lastX, lastY] = [midPoint.x, midPoint.y];
+            activePointers[pointerId].lastX = midPoint.x;
+            activePointers[pointerId].lastY = midPoint.y;
         }
     } else {
         // Stabilizer OFF: Draw normal lines
         ctx.beginPath();
-        ctx.moveTo(lastX, lastY);
+        ctx.moveTo(activePointers[pointerId].lastX, activePointers[pointerId].lastY);
         ctx.lineTo(currentX, currentY);
         ctx.lineWidth = lineWidth;
         ctx.strokeStyle = color;
@@ -85,13 +101,27 @@ function draw(e) {
         ctx.stroke();
         ctx.closePath();
 
-        [lastX, lastY] = [currentX, currentY];
+        activePointers[pointerId].lastX = currentX;
+        activePointers[pointerId].lastY = currentY;
     }
 }
 
-function stopDrawing() {
-    drawing = false;
-    points = []; // Reset points
+function stopDrawing(e) {
+    const pointerId = e.pointerId; // Get the unique pointerId for this touch event
+
+    if (activePointers[pointerId]) {
+        activePointers[pointerId].drawing = false; // Stop drawing for this pointer
+        activePointers[pointerId].points = []; // Clear points
+    }
+}
+
+// Get the mouse or stylus coordinates relative to the canvas
+function getCanvasCoordinates(e) {
+    const rect = canvas.getBoundingClientRect(); // Get canvas bounds
+    return {
+        x: e.clientX - rect.left, // Adjust X relative to canvas
+        y: e.clientY - rect.top   // Adjust Y relative to canvas
+    };
 }
 
 // Button to enable drawing mode

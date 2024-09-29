@@ -1,14 +1,31 @@
 # Whiteboard Application
 
-This is a simple whiteboard application built with **HTML**, **CSS**, and **JavaScript**. The app allows users to draw, erase, and adjust the stroke size dynamically. It supports pressure-sensitive drawing for tablets and has a responsive canvas that fits the entire screen.
+This is a simple whiteboard application built using HTML, CSS, and JavaScript. It allows users to draw, erase, and clear the canvas using mouse, touch, or stylus input. The app is designed to work on both desktop and mobile devices with multi-touch support and includes features like a drawing stabilizer and adjustable stroke size.
 
 ## Features
 
-- **Drawing and Erasing**: Switch between drawing and erasing modes.
-- **Pressure Sensitivity**: If using a tablet, the stroke size adjusts dynamically based on the pressure applied.
-- **Adjustable Stroke Size**: A slider allows the user to change the stroke size from 1px to 50px.
-- **Clear Canvas**: A button to clear the entire canvas.
-- **Responsive Canvas**: The canvas adjusts its size automatically to fit the window.
+- **Drawing and Erasing**: 
+  - Switch between drawing and erasing modes using toolbar buttons.
+  - Use a stylus, mouse, or touch input to interact with the canvas.
+
+- **Stroke Size Control**: 
+  - Adjust the stroke size using a slider in the toolbar. 
+  - The size of the stroke can also dynamically change based on the pressure of a stylus if supported.
+
+- **Drawing Stabilizer**: 
+  - A stabilizer feature smooths out strokes when enabled. 
+  - This can be toggled on or off using a checkbox in the toolbar.
+
+- **Multi-Touch Support**: 
+  - The application supports drawing with multiple touch points simultaneously.
+  - You can use multiple fingers or styluses without interference between touches.
+
+- **Mobile-Friendly Display**: 
+  - The toolbar layout adjusts automatically for mobile devices, stacking vertically to ensure proper display.
+  - The canvas adapts to the screen size for an optimal experience on phones and tablets.
+
+- **Clear Canvas**: 
+  - Clear the entire canvas using the "Clear" button in the toolbar.
 
 ## Demo
 
@@ -29,19 +46,27 @@ To run the whiteboard app locally, follow these steps:
 
 No additional libraries or frameworks are required.
 
-## How to Use
+## Usage
 
 1. **Drawing**: 
-   - Click the **Draw** button and use your mouse or tablet stylus to draw on the canvas.
-   
+   - Click the "Draw" button to activate drawing mode.
+   - Adjust the stroke size using the slider.
+   - Use a mouse, touch, or stylus to draw on the canvas.
+
 2. **Erasing**: 
-   - Click the **Erase** button to switch to eraser mode. You can erase parts of your drawing by dragging over it.
+   - Click the "Erase" button to activate erasing mode.
+   - The eraser size is fixed, but its effectiveness can vary with stylus pressure.
 
-3. **Change Stroke Size**: 
-   - Use the slider labeled **"Stroke Size"** to adjust the width of the stroke for drawing or erasing.
+3. **Stroke Size Slider**: 
+   - Drag the slider to adjust the stroke size in drawing mode. 
+   - The current size is displayed next to the slider.
 
-4. **Clear the Canvas**: 
-   - Click the **Clear** button to remove all drawings and reset the canvas.
+4. **Stabilizer**: 
+   - Check or uncheck the "Stabilizer" option to toggle smooth strokes.
+   - When enabled, drawing with a smoother curve is applied to your strokes, which can be useful for freehand drawing.
+
+5. **Clear**: 
+   - Click the "Clear" button to erase everything on the canvas.
 
 ## File Structure
 
