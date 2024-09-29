@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Whiteboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="toolbar">
+        <button id="drawBtn">Draw</button>
+        <button id="eraseBtn">Erase</button>
+        <button id="clearBtn">Clear</button>
+        <label for="strokeSize">Stroke Size: </label>
+        <input type="range" id="strokeSize" min="1" max="50" value="5">
+        <span id="strokeSizeValue">5</span> <!-- Display current stroke size -->
+    </div>
+    <canvas id="whiteboard"></canvas>
+
+    <script src="script.js"></script>
+</body>
+</html>
