@@ -86,8 +86,3 @@ label[for="stabilizerCheckbox"] {
         margin-top: 5px; /* Add a top margin for separation */
     }
 }
-
-label[for="stabilizerCheckbox"] {
-    margin-left: 10px;
-    margin-right: 5px;
-}
