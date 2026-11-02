@@ -1,107 +1,722 @@
+/* ---------- Theme tokens ---------- */
 :root {
-    --bg-color: #ffffff;
-    --toolbar-bg: #f5f5f5;
-    --text-color: #333333;
-    --button-bg: #007BFF;
-    --canvas-filter: none;
+    --workspace: #e9ebef;
+    --surface: #ffffff;
+    --surface-hover: #f1f3f5;
+    --text: #1f2328;
+    --muted: #6b7280;
+    --border: rgba(0, 0, 0, 0.08);
+    --border-strong: rgba(0, 0, 0, 0.18);
+    --accent: #2563eb;
+    --accent-soft: rgba(37, 99, 235, 0.12);
+    --on-accent: #ffffff;
+    --paper: #ffffff;
+    --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 6px 20px rgba(0, 0, 0, 0.08);
+    --panel-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 12px 32px rgba(0, 0, 0, 0.10);
+    color-scheme: light;
 }
 
-body.dark-mode {
-    --bg-color: #121212;
-    --toolbar-bg: #1e1e1e;
-    --text-color: #e0e0e0;
-    --button-bg: #3700B3;
-    --canvas-filter: invert(1) hue-rotate(180deg); /* This makes black look white and keeps colors correct */
+:root[data-theme="dark"] {
+    --workspace: #111214;
+    --surface: #1d1e21;
+    --surface-hover: #2a2b2f;
+    --text: #e6e7ea;
+    --muted: #9aa0a8;
+    --border: rgba(255, 255, 255, 0.08);
+    --border-strong: rgba(255, 255, 255, 0.22);
+    --accent: #6ea0ff;
+    --accent-soft: rgba(110, 160, 255, 0.16);
+    --on-accent: #0b1020;
+    --paper: #232428; /* Dark paper; black ink renders light (see THEME_INK in script.js) */
+    --card-shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 6px 20px rgba(0, 0, 0, 0.35);
+    --panel-shadow: 0 1px 3px rgba(0, 0, 0, 0.5), 0 12px 32px rgba(0, 0, 0, 0.45);
+    color-scheme: dark;
 }
 
+/* ---------- Modes ---------- */
+/* Storyboard-only UI (filmstrip, captions, aspect ratio) */
+body:not(.mode-storyboard) .storyboard-only,
+body.mode-storyboard .whiteboard-only {
+    display: none !important;
+}
+
+/* Whiteboard: the paper fills the stage edge to edge, and the workspace
+   takes the paper color so the toolbars appear to float on the board */
+body:not(.mode-storyboard) {
+    --workspace: var(--paper);
+}
+
+body:not(.mode-storyboard) #stage {
+    padding: 0;
+}
+
+body:not(.mode-storyboard) #panel {
+    border-radius: 0;
+    box-shadow: none;
+}
+
+/* ---------- Base ---------- */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: sans-serif;
 }
 
-body, html {
+[hidden] {
+    display: none !important;
+}
+
+html, body {
     height: 100%;
+    overflow: hidden; /* App fills the screen; no page scroll */
+}
+
+body {
     display: flex;
     flex-direction: column;
-    background-color: var(--bg-color);
-    color: var(--text-color);
-    transition: background-color 0.3s ease; /* Smooth transition */
+    height: 100dvh;
+    background: var(--workspace);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 14px;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 0.2s ease;
 }
 
-.toolbar {
+textarea, input {
+    -webkit-user-select: text;
+    user-select: text;
+}
+
+/* Keep toolbar shadows above the full-bleed whiteboard paper */
+.toolbar,
+.toolrail,
+.filmstrip {
+    position: relative;
+    z-index: 5;
+}
+
+.card,
+.toolbar,
+.toolrail,
+.filmstrip,
+.popover {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: var(--card-shadow);
+}
+
+/* ---------- Buttons ---------- */
+button, select {
+    font: inherit;
+    color: inherit;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    touch-action: manipulation; /* No double-tap zoom on tablets */
+}
+
+button svg {
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex-shrink: 0;
+}
+
+button svg .filled {
+    fill: currentColor;
+    fill-opacity: 0.35;
+}
+
+/* 44px = comfortable touch/pen target */
+.icon-btn {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 11px;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.pill-btn {
     display: flex;
-    justify-content: center;
-    padding: 10px;
-    background-color: var(--toolbar-bg);
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
     align-items: center;
+    gap: 6px;
+    height: 44px;
+    padding: 0 14px 0 12px;
+    border-radius: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-canvas {
-    width: 100vw;
-    height: calc(100vh - 50px);
-    background-color: white; /* Always white underlying data */
-    filter: var(--canvas-filter); /* This is the magic part */
+.icon-btn:hover:not(:disabled),
+.pill-btn:hover:not(:disabled) {
+    background: var(--surface-hover);
+}
+
+.icon-btn[aria-pressed="true"],
+.pill-btn[aria-pressed="true"],
+.icon-btn[aria-expanded="true"] {
+    background: var(--accent-soft);
+    color: var(--accent);
+}
+
+.pill-btn.accent,
+.pill-btn.accent:hover {
+    background: var(--accent);
+    color: var(--on-accent);
+}
+
+button:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+}
+
+.group {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.divider {
+    flex-shrink: 0;
+    width: 1px;
+    height: 28px;
+    margin: 0 4px;
+    background: var(--border);
+}
+
+/* ---------- Top toolbar ---------- */
+.toolbar {
+    align-self: center;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    max-width: calc(100% - 24px);
+    margin: calc(12px + env(safe-area-inset-top)) 12px 0;
+    padding: 6px;
+}
+
+/* Whiteboard | Storyboard switch */
+.segmented {
+    display: flex;
+    gap: 2px;
+    padding: 3px;
+    border-radius: 13px;
+    background: var(--surface-hover);
+}
+
+.seg-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 38px;
+    padding: 0 12px 0 10px;
+    border-radius: 10px;
+    color: var(--muted);
+    font-weight: 500;
+    white-space: nowrap;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.seg-btn:hover {
+    color: var(--text);
+}
+
+.seg-btn[aria-pressed="true"] {
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12), 0 0 0 1px var(--border);
+}
+
+/* Text font picker (same look as the mode switch); each label uses its font */
+.font-btn {
+    padding: 0 12px;
+    font-size: 15px;
+}
+
+.font-sample {
+    display: none; /* Shown instead of the name on narrow screens */
+}
+
+/* Theme button shows the icon for the mode you'd switch to */
+:root[data-theme="dark"] .icon-moon,
+:root:not([data-theme="dark"]) .icon-sun {
+    display: none;
+}
+
+.color-dot {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--dot, var(--text));
+    box-shadow: inset 0 0 0 1px var(--border-strong);
+}
+
+.size-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 6px;
+}
+
+input[type="range"] {
+    width: 130px;
+    height: 44px;
+    accent-color: var(--accent);
+    cursor: pointer;
+}
+
+#sizeValue {
+    min-width: 28px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    color: var(--muted);
+}
+
+.size-label {
+    font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Workspace: tool rail + panel ---------- */
+.workspace {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+}
+
+.toolrail {
+    align-self: center;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-left: calc(12px + env(safe-area-inset-left));
+    padding: 6px;
+}
+
+.toolrail .divider {
+    width: 28px;
+    height: 1px;
+    margin: 4px auto;
+}
+
+.center {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+#stage {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    overflow: hidden;
+    touch-action: none; /* Palms/fingers on the margins shouldn't scroll or zoom */
+}
+
+/* Width/height are set by script.js to fit the stage at the panel's aspect ratio */
+#panel {
+    position: relative;
+    flex-shrink: 0;
+    border-radius: 4px;
+    overflow: hidden;
+    background: var(--paper);
+    box-shadow: var(--panel-shadow);
+    /* No color transition: the ink swaps instantly on theme change, so the paper must too */
+}
+
+#board {
     display: block;
+    width: 100%;
+    height: 100%;
     cursor: crosshair;
     touch-action: none;
 }
 
-button {
-    margin: 0 10px;
-    padding: 10px 20px;
-    border: none;
-    background-color: var(--button-bg);
-    color: white;
-    font-size: 16px;
-    cursor: pointer;
+#board[data-tool="eraser"] {
+    cursor: none; /* The eraser circle replaces the native cursor */
+}
+
+#board[data-tool="text"] {
+    cursor: text;
+}
+
+#overlay {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+/* On-canvas text editing; font, position and size are set by script.js */
+#textEditor {
+    position: absolute;
+    z-index: 2;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    outline: 1.5px dashed var(--accent);
+    outline-offset: 6px;
+    resize: none;
+    overflow: hidden;
+    white-space: pre;
+}
+
+/* Eraser size preview: follows the pointer while in erase mode */
+#eraserCursor {
+    position: fixed;
+    display: none;
+    pointer-events: none; /* Never block events to the canvas */
+    border-radius: 50%;
+    transform: translate(-50%, -50%); /* Center the circle on the pointer */
+    /* Dark ring + light halo so it's visible on any background */
+    border: 1px solid rgba(0, 0, 0, 0.8);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.8);
+    z-index: 10;
+}
+
+/* ---------- Captions ---------- */
+#captions {
+    align-self: center;
+    display: flex;
+    gap: 8px;
+    max-width: calc(100% - 32px);
+    margin: 0 16px 12px;
+}
+
+.panel-badge {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    min-width: 44px;
+    padding: 0 8px;
+    border-radius: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    font-size: 18px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+#captions textarea {
+    flex: 1;
+    min-width: 0;
+    height: 56px;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+    line-height: 1.35;
+    resize: none;
+}
+
+#captions textarea::placeholder {
+    color: var(--muted);
+}
+
+/* ---------- Filmstrip ---------- */
+.filmstrip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 12px calc(12px + env(safe-area-inset-bottom));
+    padding: 6px 6px 6px 10px;
+}
+
+.thumbs {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    gap: 10px;
+    padding: 4px;
+    overflow-x: auto;
+    scrollbar-width: thin;
+}
+
+.thumb {
+    position: relative;
+    flex-shrink: 0;
     border-radius: 5px;
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    transition: outline-color 0.15s ease;
 }
 
-button:hover {
-    background-color: #0056b3;
+.thumb[aria-current="true"] {
+    outline-color: var(--accent);
 }
 
-input[type="range"] {
-    margin-left: 10px;
-    width: 150px;
+.thumb canvas {
+    display: block;
+    border-radius: 4px;
+    background: var(--paper);
+    box-shadow: 0 0 0 1px var(--border-strong);
 }
 
-#strokeSizeValue {
-    margin-left: 10px;
-    font-weight: bold;
-    text-align: center;
-    display: inline-block;
-    width: 30px; /* Fixed width for stable display */
+.thumb-num {
+    position: absolute;
+    left: 4px;
+    top: 4px;
+    padding: 0 5px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 16px;
 }
 
-label[for="stabilizerCheckbox"] {
-    margin-left: 10px;
-    margin-right: 5px;
+/* ---------- Popovers ---------- */
+.popover {
+    position: fixed;
+    z-index: 30;
+    padding: 12px;
+    border-radius: 14px;
 }
 
-/* Media Query for Mobile Devices (widths <= 1200px) */
-@media (max-width: 1200px) {
-    .toolbar {
-        flex-direction: column; /* Stack the toolbar items vertically */
-        padding: 5px; /* Reduce padding on mobile */
+.swatches {
+    display: grid;
+    grid-template-columns: repeat(4, 40px);
+    gap: 8px;
+}
+
+.swatch {
+    display: block;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--dot);
+    box-shadow: inset 0 0 0 1px var(--border-strong);
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+}
+
+.swatch[aria-pressed="true"] {
+    outline-color: var(--accent);
+}
+
+.swatch.custom {
+    width: 28px;
+    height: 28px;
+    background: conic-gradient(#e03131, #f08c00, #fab005, #2f9e44, #1971c2, #9c36b5, #e03131);
+}
+
+.custom-color {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+    padding: 6px 8px;
+    border-radius: 10px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.custom-color:hover {
+    background: var(--surface-hover);
+}
+
+/* The native picker is invisible but covers the row, so a tap opens it */
+.custom-color input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.menu {
+    padding: 6px;
+    min-width: 220px;
+    overflow-y: auto; /* max-height is set by script.js to fit the viewport */
+    overscroll-behavior: contain;
+}
+
+.menu-heading {
+    padding: 10px 14px 4px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+/* Selectable menu rows (canvas sizes, stabilizer levels): name left, detail right */
+.menu-item.option-item { /* Beats .menu-item display: block */
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    min-width: 280px;
+    padding: 10px 14px;
+}
+
+.option-item[aria-pressed="true"] {
+    background: var(--accent-soft);
+    color: var(--accent);
+}
+
+.menu-detail {
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.option-item[aria-pressed="true"] .menu-detail {
+    color: inherit;
+}
+
+/* Light | Dark switch inside the export menu */
+.export-theme {
+    margin: 4px 8px 6px;
+}
+
+.export-theme .seg-btn {
+    flex: 1;
+    justify-content: center;
+}
+
+.export-theme svg {
+    width: 18px;
+    height: 18px;
+}
+
+/* Current stabilizer level next to the button label */
+.opt-value {
+    font-weight: 400;
+    opacity: 0.75;
+}
+
+.menu-item {
+    display: block;
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 9px;
+    text-align: left;
+    font-weight: 500;
+}
+
+.menu-item:hover {
+    background: var(--surface-hover);
+}
+
+/* ---------- Toast ---------- */
+#toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(110px + env(safe-area-inset-bottom));
+    transform: translate(-50%, 8px);
+    max-width: calc(100% - 32px);
+    padding: 10px 16px;
+    border-radius: 10px;
+    background: var(--text);
+    color: var(--surface);
+    font-weight: 500;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 40;
+}
+
+#toast.show {
+    opacity: 1;
+    transform: translate(-50%, 0);
+}
+
+/* ---------- Narrow screens ---------- */
+/* Icon-only mode switch and options so the toolbar fits one row on portrait tablets */
+@media (max-width: 1000px) {
+    .seg-label,
+    .opt-label {
+        display: none;
     }
 
-    button {
-        margin: 5px 0; /* Stack buttons vertically with small margin */
-        padding: 8px 15px; /* Reduce button size for mobile */
-        font-size: 14px; /* Smaller font size */
+    .seg-btn {
+        padding: 0 10px;
+    }
+
+    #fillBtn,
+    #stabilizerBtn {
+        width: 44px;
+        padding: 0;
+        justify-content: center;
+    }
+
+    .font-label {
+        display: none;
+    }
+
+    .font-sample {
+        display: inline;
+    }
+
+    .font-btn {
+        padding: 0 9px;
+    }
+
+    /* The "1920×1080" label explains itself; drop the icon to save room */
+    #canvasSizeBtn svg {
+        display: none;
+    }
+
+    #canvasSizeBtn {
+        padding: 0 10px;
     }
 
     input[type="range"] {
-        margin: 5px 0;
-        width: 100%; /* Full width slider on mobile */
+        width: 100px;
+    }
+}
+
+@media (max-width: 700px) {
+    .toolbar .divider {
+        display: none;
     }
 
-    #strokeSizeValue {
-        margin-left: 0; /* Reset margin for vertical layout */
-        margin-top: 5px; /* Add a top margin for separation */
+    input[type="range"] {
+        width: 100px;
+    }
+
+    /* The filmstrip already shows the number; give the fields the room */
+    .panel-badge {
+        display: none;
+    }
+
+    /* Captions stay one row with a fixed height: the panel layout depends on it */
+    #captions textarea {
+        height: 44px;
+        padding: 4px 8px;
+    }
+
+    .pill-btn.accent {
+        padding: 0 12px;
     }
 }
