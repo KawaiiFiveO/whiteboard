@@ -1383,8 +1383,9 @@ function deletePanel() {
     if (isDrawing() || doc.panels.length === 1) return;
     const index = currentPanelIndex;
     const [panel] = doc.panels.splice(index, 1);
-    pushHistory({ type: 'removePanel', panel, index });
+    // Re-point at a valid panel before pushHistory, which reads currentPanel()
     currentPanelIndex = Math.min(index, doc.panels.length - 1);
+    pushHistory({ type: 'removePanel', panel, index });
     rebuildFilmstrip();
     showPanel(currentPanelIndex);
     scheduleSave();
